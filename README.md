@@ -7,6 +7,14 @@ A Nim-Proteus library.
 The Graphics class provides functionality for working with a low level
 rendering API such as OpenGL.
 
+    - Window management
+    - Resource management
+      - Loading of resources such as Models
+    - Instance management
+    - Rendering
+
+The sample below demonstrates loading and rendering a model.
+
 ```nim
 import graphics
 import graphics/renderer
