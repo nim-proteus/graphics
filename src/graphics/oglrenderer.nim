@@ -148,6 +148,7 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
 
 
 method endFrame*(this: OglRenderer) =
+    glfwPollEvents()
     swapBuffers(this.window)
 
 proc getModelInstance*(this: OglRenderer, id: ModelId): ModelInstance =

@@ -8,7 +8,7 @@
 import unittest
 
 import graphics
-import graphics/oglrenderer
+import graphics/oglrenderer 
 import std/logging
 
 test "can create window":
