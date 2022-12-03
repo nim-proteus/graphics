@@ -315,3 +315,6 @@ method openWindow*(this: OglRenderer, width: int32, height: int32, title: string
     this.loadDefaultProgram()
 
     info "Loaded default program"
+
+method isWindowOpen*(this: OglRenderer): bool =
+    not windowShouldClose(this.window)
