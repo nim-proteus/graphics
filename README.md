@@ -28,7 +28,7 @@ var mi = g.getModelInstance(path)
 
 var tasks = newSeq[RenderTask]()
 for mesh in mi.meshes:
-    tasks.add(RenderTask(renderMode: RenderMode.Projection, modelId: mi.id, meshId: mesh.id, matrix: mesh.matrix))
+    tasks.add(RenderTask(renderMode: RenderMode.Projection, modelId: mi.id, meshId: mesh.id))
 
 g.render(tasks)
 ```

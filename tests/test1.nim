@@ -8,5 +8,23 @@
 import unittest
 
 import graphics
-test "can add":
-  check add(5, 5) == 10
+import graphics/oglrenderer
+import std/logging
+
+test "can create window":
+    let fmtStr = "[$time] - $levelname: "
+    addHandler(newConsoleLogger(fmtStr = fmtStr))
+    # addHandler(newRollingFileLogger(filename = "log.txt", fmtStr = fmtStr))
+
+    var g = newGraphics(newOglRenderer())
+    g.openWindow(640, 480, "Sample")
+
+    # var path = "some/path/to/model.xyz"
+    # discard g.loadModel(path)
+    # var mi = g.getModelInstance(path)
+
+    var tasks = newSeq[RenderTask]()
+    # for mesh in mi.meshes:
+    #     tasks.add(RenderTask(mode: RenderMode.Projection, modelId: mi.id, meshId: mesh.meshId))
+
+    g.render(tasks)

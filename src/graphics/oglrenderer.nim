@@ -146,31 +146,6 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
 
     # quit "Frame"
 
-method openWindow*(this: OglRenderer, width: int32, height: int32, title: string) =
-    if not glfwInit():
-        error "Init failed"
-        quit()
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE.int32);
-
-    this.window = glfwCreateWindow(width, height, title, nil, nil, false)
-    if (this.window == nil):
-        glfwTerminate()
-        error "Window create failed"
-        quit()
-
-    makeContextCurrent(this.window)
-
-    # Initialize OpenGL
-    loadExtensions()
-    # glViewport(0, 0, screenWidth, screenHeight)
-    glClearColor(0.0, 0.0, 0.0, 1.0) # Set background color to black and opaque
-    glClearDepth(1.0) # Set background depth to farthest
-    glEnable(GL_DEPTH_TEST) # Enable depth testing for z-culling
-    glDepthFunc(GL_LEQUAL) # Set the type of depth-test
 
 method endFrame*(this: OglRenderer) =
     swapBuffers(this.window)
@@ -224,7 +199,7 @@ proc loadDefaultProgram(this: OglRenderer) =
 
     var program = newProgramFromSource(vertexShader, fragmentShader)
     program.use()
-    this.shaderPrograms[program.glProgramId] = program
+    this.shaderPrograms[program.id] = program
     this.defaultShaderProgram = program.id
 
 
@@ -290,11 +265,52 @@ proc newProgramFromSource*(vertexShader: string, fragmentShader: string): OglPro
 
 proc newOglRenderer*(): OglRenderer =
     info "Creating OglRenderer"
-    info cast[cstring](glGetString(GL_RENDERER))
-    info cast[cstring](glGetString(GL_VERSION))
-
+    
     result = new(OglRenderer)
     result.loader = newAssimpLoader()
     result.models = newTable[ModelId, BufferedModel]()
     result.shaderPrograms = newTable[ShaderProgramId, OglProgram]()
-    result.loadDefaultProgram()
+
+method openWindow*(this: OglRenderer, width: int32, height: int32, title: string) =
+    if not glfwInit():
+        error "Init failed"
+        quit()
+    else:
+        info "Init succeeded"
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE.int32);
+
+    info "Creating window"
+
+    this.window = glfwCreateWindow(width, height, title, nil, nil, false)
+    if (this.window == nil):
+        glfwTerminate()
+        error "Window create failed"
+        quit()
+    else:
+        info "Created window"
+
+    makeContextCurrent(this.window)
+
+    # Initialize OpenGL
+    loadExtensions()
+
+    info "Loading extensions"
+
+    # glViewport(0, 0, screenWidth, screenHeight)
+    glClearColor(0.0, 0.0, 0.0, 1.0) # Set background color to black and opaque
+    glClearDepth(1.0) # Set background depth to farthest
+    glEnable(GL_DEPTH_TEST) # Enable depth testing for z-culling
+    glDepthFunc(GL_LEQUAL) # Set the type of depth-test
+
+    info cast[cstring](glGetString(GL_RENDERER))
+    info cast[cstring](glGetString(GL_VERSION))
+
+    info "Loading default program"
+
+    this.loadDefaultProgram()
+
+    info "Loaded default program"
