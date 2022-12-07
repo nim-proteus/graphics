@@ -83,7 +83,7 @@ method loadModel*(this: OglRenderer, path: string): ModelId =
         var b = new(BufferedMesh)
         # Vertex array object, one per mesh
         glGenVertexArrays(1, b.vaoId.addr)
-
+        glBindVertexArray(b.vaoId)
         if m.hasVertices():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
