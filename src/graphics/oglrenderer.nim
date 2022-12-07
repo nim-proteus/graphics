@@ -155,9 +155,8 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
         glUniformMatrix4fv(mvpId, 1.GLsizei, false.GLboolean, mvp.arr[0].arr[0].unsafeAddr)
 
         glBindVertexArray(bufferedMesh.vaoId)
-        # glBindBuffer(GL_ARRAY_BUFFER, this.vbo)
-        # glBufferData(GL_ARRAY_BUFFER, task.vertices.len * sizeof(Vert), task.vertices[0].unsafeAddr, GL_DYNAMIC_DRAW)
-        glDrawArrays(GL_TRIANGLES, 0, GLsizei(bufferedMesh.indices.len / 3)) # 3 indices per triangle
+        glDrawElements(GL_TRIANGLES, bufferedMesh.indices.len.GLsizei, GL_UNSIGNED_INT, nil)
+        glBindVertexArray(0)
 
     # quit "Frame"
 
