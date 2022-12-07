@@ -77,31 +77,46 @@ method loadModel*(this: OglRenderer, path: string): ModelId =
     var model = this.loader.loadModel(path)
     var bufferedModel = new(BufferedModel)
     bufferedModel.meshes = newSeq[BufferedMesh]()
+
     for m in model.meshes:
         var buffer: GLuint
         var b = new(BufferedMesh)
-        if m.vertices.len > 0:
+        # Vertex array object, one per mesh
+        glGenVertexArrays(1, b.vaoId.addr)
+
+        if m.hasVertices():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Vertex), m.vertices[0].addr, GL_STATIC_DRAW)
+            glVertexAttribPointer(0, 3, cGL_FLOAT, GL_FALSE, 0, nil)
+            glEnableVertexAttribArray(0)
 
-        if m.texCoords.len > 0:
+        if m.hasTexCoords():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(TexCoord), m.texCoords[0].addr, GL_STATIC_DRAW)
+            glVertexAttribPointer(1, 2, cGL_FLOAT, GL_FALSE, 0, nil)
+            glEnableVertexAttribArray(1)
 
-        if m.normals.len > 0:
+        if m.hasNormals():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Normal), m.normals[0].addr, GL_STATIC_DRAW)
+            glVertexAttribPointer(2, 3, cGL_FLOAT, GL_FALSE, 0, nil)
+            glEnableVertexAttribArray(2)
 
-        if m.colors.len > 0:
+        if m.hasColors():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Color), m.colors[0].addr, GL_STATIC_DRAW)
+            glVertexAttribPointer(3, 3, cGL_FLOAT, GL_FALSE, 0, nil)
+            glEnableVertexAttribArray(3)
 
-        if m.indices.len > 0:
+        if m.hasIndices():
             b.indices = m.indices
+            glGenBuffers(1, buffer.addr)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer)
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, m.indices.len * sizeof(uint32), m.indices[0].unsafeaddr, GL_STATIC_DRAW)
 
         b.id = bufferedModel.meshes.len.MeshId
         bufferedModel.meshes.add(b)
