@@ -35,7 +35,8 @@ type
     BufferedMesh = ref object of RootObj
         id*: MeshId
         vaoId*: GLuint
-        indices*: seq[int32]
+        # indices*: seq[int32]
+        faceCount*: GLsizei
 
 
 const ShaderNameMap* = [
@@ -84,26 +85,26 @@ method loadModel*(this: OglRenderer, path: string): ModelId =
         # Vertex array object, one per mesh
         glGenVertexArrays(1, b.vaoId.addr)
         glBindVertexArray(b.vaoId)
-        if m.hasVertices():
-            glGenBuffers(1, buffer.addr)
-            glBindBuffer(GL_ARRAY_BUFFER, buffer)
-            glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Vertex), m.vertices[0].addr, GL_STATIC_DRAW)
-            glVertexAttribPointer(0, 3, cGL_FLOAT, GL_FALSE, 0, nil)
-            glEnableVertexAttribArray(0)
-
-        if m.hasTexCoords():
-            glGenBuffers(1, buffer.addr)
-            glBindBuffer(GL_ARRAY_BUFFER, buffer)
-            glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(TexCoord), m.texCoords[0].addr, GL_STATIC_DRAW)
-            glVertexAttribPointer(1, 2, cGL_FLOAT, GL_FALSE, 0, nil)
-            glEnableVertexAttribArray(1)
+        
+        glGenBuffers(1, buffer.addr)
+        glBindBuffer(GL_ARRAY_BUFFER, buffer)
+        glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Vertex), m.vertices[0].addr, GL_STATIC_DRAW)
+        glVertexAttribPointer(0, 3, cGL_FLOAT, GL_FALSE, 0, nil)
+        glEnableVertexAttribArray(0)
 
         if m.hasNormals():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Normal), m.normals[0].addr, GL_STATIC_DRAW)
-            glVertexAttribPointer(2, 3, cGL_FLOAT, GL_FALSE, 0, nil)
+            glVertexAttribPointer(1, 3, cGL_FLOAT, GL_FALSE, 0, nil)
             glEnableVertexAttribArray(2)
+
+        if m.hasTexCoords():
+            glGenBuffers(1, buffer.addr)
+            glBindBuffer(GL_ARRAY_BUFFER, buffer)
+            glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(TexCoord), m.texCoords[0].addr, GL_STATIC_DRAW)
+            glVertexAttribPointer(2, 2, cGL_FLOAT, GL_FALSE, 0, nil)
+            glEnableVertexAttribArray(1)
 
         if m.hasColors():
             glGenBuffers(1, buffer.addr)
@@ -113,7 +114,7 @@ method loadModel*(this: OglRenderer, path: string): ModelId =
             glEnableVertexAttribArray(3)
 
         if m.hasIndices():
-            b.indices = m.indices
+            b.faceCount = m.indices.len.GLsizei
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer)
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, m.indices.len * sizeof(uint32), m.indices[0].unsafeaddr, GL_STATIC_DRAW)
@@ -140,7 +141,7 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
 
     # Setup matrices for Model-View-Projection
     let projection = glm.perspective(45f, 640f / 480f, 0.1f, 100.0f)
-    let view = glm.lookAt(this.cameraEye, this.cameraLookAt, vec3f(0, 1, 0))
+    let view = glm.lookAt(this.getCameraEye(), this.getCameraLookAt(), vec3f(0, 1, 0))
 
     let shaderProgram = this.shaderPrograms[this.defaultShaderProgram]
     shaderProgram.use()
@@ -154,8 +155,10 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
         let mvpId = glGetUniformLocation(shaderProgram.glProgramId, "mvp")
         glUniformMatrix4fv(mvpId, 1.GLsizei, false.GLboolean, mvp.arr[0].arr[0].unsafeAddr)
 
+        # echo bufferedMesh.indices.len
+
         glBindVertexArray(bufferedMesh.vaoId)
-        glDrawElements(GL_TRIANGLES, bufferedMesh.indices.len.GLsizei, GL_UNSIGNED_INT, nil)
+        glDrawElements(GL_TRIANGLES, bufferedMesh.faceCount, GL_UNSIGNED_INT, nil)
         glBindVertexArray(0)
 
     # quit "Frame"
@@ -173,6 +176,8 @@ proc getModelInstance*(this: OglRenderer, id: ModelId): ModelInstance =
     for m in model.meshes:
         var mesh = new(MeshInstance)
         mesh.meshId = m.id
+        mesh.rotation = glm.quat(vec3f(1, 0, 0), 0)
+        mesh.translation = vec3f(0, 0, 0)
         result.meshes.add(mesh)
 
 
@@ -189,27 +194,31 @@ proc loadDefaultProgram(this: OglRenderer) =
         #version 410 core
 
         layout (location = 0) in vec3 vertexPosition;
-        layout (location = 1) in vec3 vertexColor;
-        layout (location = 0) out vec3 fragmentColor;
+        layout (location = 1) in vec3 normal;
+        layout (location = 2) in vec3 uv;
 
         uniform mat4 mvp;
+        out vec3 oNormal;
+        out vec2 oUv;
 
         void main()
         {
             gl_Position = mvp * vec4(vertexPosition, 1.0);
-            fragmentColor = vertexColor;
+            oNormal = normal;
+            oUv = uv.xy;
         }"""
 
     #Default fragment shader
     var fragmentShader = """
         #version 410 core
-
-        layout (location = 0) in vec3 fragmentColor;
         out vec4 finalColor;
+
+        in vec3 oNormal;
+        in vec2 oUv;
 
         void main()
         {
-            finalColor = vec4(fragmentColor, 1.0);
+            finalColor = vec4(1.0, 0.0, 0.0, 1.0);
         }"""
 
     var program = newProgramFromSource(vertexShader, fragmentShader)

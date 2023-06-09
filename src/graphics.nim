@@ -24,8 +24,8 @@ type
         renderer: Renderer
 
     Renderer* = ref object of RootObj
-        cameraEye*: Vec3f
-        cameraLookAt*: Vec3f
+        cameraEye: Vec3f
+        cameraLookAt: Vec3f
 
     RenderTask* = ref object of RootObj
         mode*: RenderMode
@@ -88,6 +88,9 @@ proc getModelInstance*(this: Graphics, filePath: string): ModelInstance =
 proc setRenderer*(this: Graphics, renderer: Renderer) =
     this.renderer = renderer
 
+proc getRenderer*(this: Graphics): Renderer =
+    this.renderer
+
 
 proc openWindow*(this: Graphics, width: int32, height: int32, title: string) =
     this.renderer.openWindow(width, height, title)
@@ -101,3 +104,11 @@ proc newGraphics*(renderer: Renderer): Graphics =
     result = new(Graphics)
     result.modelNameMap = newTable[string, ModelId]()
     result.renderer = renderer
+
+proc getCameraEye*(this: Renderer): Vec3f = this.cameraEye
+
+proc setCameraEye*(this: Renderer, cameraEye: Vec3f) = this.cameraEye = cameraEye
+
+proc getCameraLookAt*(this: Renderer): Vec3f = this.cameraLookAt
+
+proc setCameraLookAt*(this: Renderer, cameraLookAt: Vec3f) = this.cameraLookAt = cameraLookAt

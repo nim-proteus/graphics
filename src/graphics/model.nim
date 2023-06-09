@@ -19,7 +19,6 @@ proc newModel*(): Model =
     result = new(Model)
     result.meshes = newSeq[Mesh]()
 
-proc hasVertices*(this: Mesh): bool = this.vertices.len > 0
 proc hasTexCoords*(this: Mesh): bool = this.texCoords.len > 0
 proc hasNormals*(this: Mesh): bool = this.normals.len > 0
 proc hasColors*(this: Mesh): bool = this.colors.len > 0
