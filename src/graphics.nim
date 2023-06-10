@@ -85,6 +85,8 @@ proc loadModel*(this: Graphics, filePath: string): ModelId =
 proc getModelInstance*(this: Graphics, filePath: string): ModelInstance =
     this.renderer.getModelInstance(filePath)
 
+proc getModelInstance*(this: Graphics, modelId: ModelId): ModelInstance =
+    this.renderer.getModelInstance(modelId)
 
 proc setRenderer*(this: Graphics, renderer: Renderer) =
     this.renderer = renderer
