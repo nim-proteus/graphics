@@ -62,6 +62,7 @@ method loadShader*(this: Renderer, shaderType: ShaderType, shaderText: string): 
 method loadTexture*(this: Renderer, path: string): Texture {.base.} = discard
 method loadModel*(this: Renderer, path: string): ModelId {.base.} = discard
 method render*(this: Renderer, tasks: seq[RenderTask]) {.base.} = discard
+method getModelInstance*(this: Renderer, modelId: ModelId): ModelInstance {.base.} = discard
 method getModelInstance*(this: Renderer, path: string): ModelInstance {.base.} = discard
 method openWindow*(this: Renderer, width: int32, height: int32, title: string) {.base.} = discard
 method isWindowOpen*(this: Renderer): bool {.base.} = discard

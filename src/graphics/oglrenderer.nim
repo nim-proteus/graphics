@@ -168,7 +168,7 @@ method endFrame*(this: OglRenderer) =
     glfwPollEvents()
     swapBuffers(this.window)
 
-proc getModelInstance*(this: OglRenderer, id: ModelId): ModelInstance =
+method getModelInstance*(this: OglRenderer, id: ModelId): ModelInstance =
     var model = this.models[id]
     result = new(ModelInstance)
     result.modelId = id

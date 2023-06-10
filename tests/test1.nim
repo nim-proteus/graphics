@@ -13,24 +13,6 @@ import std/logging
 import glm
 import os
 
-# test "can create window":
-#     let fmtStr = "[$time] - $levelname: "
-#     addHandler(newConsoleLogger(fmtStr = fmtStr))
-#     # addHandler(newRollingFileLogger(filename = "log.txt", fmtStr = fmtStr))
-
-#     var g = newGraphics(newOglRenderer())
-#     g.openWindow(640, 480, "Sample")
-
-#     # var path = "some/path/to/model.xyz"
-#     # discard g.loadModel(path)
-#     # var mi = g.getModelInstance(path)
-
-#     var tasks = newSeq[RenderTask]()
-#     # for mesh in mi.meshes:
-#     #     tasks.add(RenderTask(mode: RenderMode.Projection, modelId: mi.id, meshId: mesh.meshId))
-
-#     g.render(tasks)
-
 test "can render duck":
     let fmtStr = "[$time] - $levelname: "
     addHandler(newConsoleLogger(fmtStr = fmtStr))
@@ -41,13 +23,13 @@ test "can render duck":
     g.getRenderer().setCameraEye(vec3f(0, 0, 100))
 
     var path = "tests/res/models/duck.dae"
-    discard g.loadModel(path)
-    var mi = g.getModelInstance(path)
+    var modelId = g.loadModel(path)
+    var mi = g.getModelInstance(modelId)
 
     var tasks = newSeq[RenderTask]()
     for mesh in mi.meshes:
         # Where do we store the translate and rotation and scale?
-        tasks.add(RenderTask(mode: RenderMode.Projection, modelId: mi.id, meshId: mesh.meshId, matrix: translate(mat4f(), mesh.translation) * glm.mat4(mesh.rotation) * glm.scale(mat4f(), vec3f(0.1f, 0.1f, 0.1f))))
+        tasks.add(RenderTask(mode: RenderMode.Projection, modelId: mi.id, meshId: mesh.meshId, matrix: translate(mat4f(), mesh.translation) * glm.mat4(mesh.rotation) * glm.scale(mat4f(), vec3f(0.2f, 0.2f, 0.2f))))
 
     while g.isRunning():
         g.render(tasks)
