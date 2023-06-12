@@ -18,10 +18,42 @@ test "can render duck":
     addHandler(newConsoleLogger(fmtStr = fmtStr))
     # addHandler(newRollingFileLogger(filename = "log.txt", fmtStr = fmtStr))
 
+    var vertexShader = """
+        #version 410 core
+
+        layout (location = 0) in vec3 vertexPosition;
+        layout (location = 1) in vec3 normal;
+        layout (location = 2) in vec3 uv;
+
+        uniform mat4 mvp;
+        out vec3 oNormal;
+        out vec2 oUv;
+
+        void main()
+        {
+            gl_Position = mvp * vec4(vertexPosition, 1.0);
+            oNormal = normal;
+            oUv = uv.xy;
+        }"""
+
+    var fragmentShader = """
+        #version 410 core
+        out vec4 finalColor;
+
+        in vec3 oNormal;
+        in vec2 oUv;
+
+        void main()
+        {
+            finalColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+        }"""
+
     var g = newGraphics(newOglRenderer())
     g.openWindow(640, 480, "Sample")
     g.getRenderer().setCameraEye(vec3f(0, 0, 100))
-
+    var id = g.getRenderer().loadShaderProgram(vertexShader, fragmentShader)
+    g.getRenderer().useShaderProgram(id)
+    
     var path = "tests/res/models/duck.dae"
     var modelId = g.loadModel(path)
     var mi = g.getModelInstance(modelId)

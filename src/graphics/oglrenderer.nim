@@ -15,6 +15,7 @@ type
         defaultShaderProgram: ShaderProgramId
         loader: ModelLoader
 
+        currentShaderProgramId: ShaderProgramId
         models: TableRef[ModelId, BufferedModel]
         shaderPrograms: TableRef[ShaderProgramId, OglProgram]
 
@@ -54,7 +55,7 @@ const TextureTypeMap = [
 
 
 proc loadShaderOgl(shaderType: ShaderType, shaderText: string): OglShader
-proc newProgramFromSource*(vertexShader: string, fragmentShader: string): OglProgram
+proc newProgramFromSource*(this: OglRenderer, vertexShader: string, fragmentShader: string): OglProgram
 
 
 proc delete*(this: OglShader) = 
@@ -64,11 +65,6 @@ proc delete*(this: OglShader) =
 
 proc use*(this: OglProgram) =
     glUseProgram(this.glProgramId)
-
-
-proc loadShader*(this: OglRenderer, shaderType: ShaderType, shaderText: string): Shader =
-    loadShaderOgl(shaderType, shaderText)
-
 
 method loadTexture*(this: OglRenderer, path: string): Texture = 
     discard
@@ -126,6 +122,15 @@ method loadModel*(this: OglRenderer, path: string): ModelId =
     result = bufferedModel.id
 
 
+method loadShaderProgram*(this: OglRenderer, vertexShaderText: string, fragmentShaderText: string): ShaderProgramId =
+    var program = this.newProgramFromSource(vertexShaderText, fragmentShaderText)
+    result = program.id
+
+method useShaderProgram*(this: OglRenderer, shaderProgramId: ShaderProgramId) =
+    var program = this.shaderPrograms[shaderProgramId]
+    program.use()
+    this.currentShaderProgramId = shaderProgramId
+
 method render*(this: OglRenderer, tasks: seq[RenderTask]) =
     # Sort by z to render further items first
     # proc sortTasks(x, y: RenderTask): int = 
@@ -143,9 +148,8 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
     let projection = glm.perspective(45f, 640f / 480f, 0.1f, 100.0f)
     let view = glm.lookAt(this.getCameraEye(), this.getCameraLookAt(), vec3f(0, 1, 0))
 
-    let shaderProgram = this.shaderPrograms[this.defaultShaderProgram]
-    shaderProgram.use()
-
+    let shaderProgram = this.shaderPrograms[this.currentShaderProgramId]
+    
     # Render each 
     for task in tasks:
         var bufferedModel = this.models[task.modelId]
@@ -218,17 +222,17 @@ proc loadDefaultProgram(this: OglRenderer) =
 
         void main()
         {
-            finalColor = vec4(1.0, 0.0, 0.0, 1.0);
+            finalColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
         }"""
 
-    var program = newProgramFromSource(vertexShader, fragmentShader)
-    program.use()
-    this.shaderPrograms[program.id] = program
+    var program = this.newProgramFromSource(vertexShader, fragmentShader)
     this.defaultShaderProgram = program.id
+    this.useShaderProgram(program.id)
 
 
 proc loadShaderOgl(shaderType: ShaderType, shaderText: string): OglShader =
     info "Loading Shader " & ShaderNameMap[shaderType]
+
     var shaderId = glCreateShader(TextureTypeMap[shaderType])
     var shaders = allocCStringArray([shaderText])
     var lengths = [shaderText.len.GLint]
@@ -251,7 +255,7 @@ proc loadShaderOgl(shaderType: ShaderType, shaderText: string): OglShader =
     result = r
 
 
-proc newShaderProgram(vs: OglShader, fs: OglShader): OglProgram =
+proc newShaderProgram(this: OglRenderer, vs: OglShader, fs: OglShader): OglProgram =
     var programId = glCreateProgram()
     if programId == 0:
         error "No shader program created"
@@ -277,14 +281,17 @@ proc newShaderProgram(vs: OglShader, fs: OglShader): OglProgram =
     program.glProgramId = programId
     result = program
 
+    program.id = ShaderProgramId(len(this.shaderPrograms) + 1)
+    this.shaderPrograms[program.id] = program
+
     vs.delete()
     fs.delete()
 
 
-proc newProgramFromSource*(vertexShader: string, fragmentShader: string): OglProgram =
+proc newProgramFromSource*(this: OglRenderer, vertexShader: string, fragmentShader: string): OglProgram =
     var vs = loadShaderOgl(ShaderType.VertexShader, vertexShader)
     var fs = loadShaderOgl(ShaderType.FragmentShader, fragmentShader)
-    newShaderProgram(vs, fs)
+    this.newShaderProgram(vs, fs)
 
 
 proc newOglRenderer*(): OglRenderer =

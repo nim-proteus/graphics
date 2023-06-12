@@ -58,7 +58,9 @@ type
         rotation*: Rotation
 
 
-method loadShader*(this: Renderer, shaderType: ShaderType, shaderText: string): Shader {.base.} = discard
+method loadShaderProgram*(this: Renderer, vertexShaderText: string, fragmentShaderText: string): ShaderProgramId {.base.} = discard
+method useShaderProgram*(this: Renderer, shaderProgramId: ShaderProgramId) {.base.} = discard
+# method loadShader*(this: Renderer, shaderType: ShaderType, shaderText: string): Shader {.base.} = discard
 method loadTexture*(this: Renderer, path: string): Texture {.base.} = discard
 method loadModel*(this: Renderer, path: string): ModelId {.base.} = discard
 method render*(this: Renderer, tasks: seq[RenderTask]) {.base.} = discard
