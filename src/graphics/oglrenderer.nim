@@ -6,6 +6,7 @@ import glfw
 import model
 import modelloader
 import ../graphics
+import strutils
 
 # import std/algorithm  # Required for sorting...
 
@@ -15,9 +16,11 @@ type
         defaultShaderProgram: ShaderProgramId
         loader: ModelLoader
 
+        # Resources
         currentShaderProgramId: ShaderProgramId
         models: TableRef[ModelId, BufferedModel]
         shaderPrograms: TableRef[ShaderProgramId, OglProgram]
+        lights*: TableRef[LightId, Light]
 
     OglShader* = ref object of Shader
         glShaderId*: GLuint
@@ -38,6 +41,15 @@ type
         vaoId*: GLuint
         # indices*: seq[int32]
         faceCount*: GLsizei
+
+    UniformTypes* {.pure.} = enum
+        Int
+        Float
+        Vec2
+        Vec3
+        Vec4
+        Mat3
+        Mat4
 
 
 const ShaderNameMap* = [
@@ -66,6 +78,35 @@ proc delete*(this: OglShader) =
 proc use*(this: OglProgram) =
     glUseProgram(this.glProgramId)
 
+proc setUniform*(this: OglProgram, name: string, value: Mat4f) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniformMatrix4fv(location, 1, GL_FALSE, value.arr[0].arr[0].unsafeAddr)
+
+proc setUniform*(this: OglProgram, name: string, value: Vec3f) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniform3fv(location, 1, value.arr[0].unsafeAddr)
+
+proc setUniform*(this: OglProgram, name: string, value: Vec4f) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniform4fv(location, 1, value.arr[0].unsafeAddr)
+
+proc setUniform*(this: OglProgram, name: string, value: float) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniform1f(location, value)
+
+proc setUniform*(this: OglProgram, name: string, value: bool) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniform1i(location, value.int32)
+
+proc setUniform*(this: OglProgram, name: string, value: Mat3f) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniformMatrix3fv(location, 1, GL_FALSE, value.arr[0].arr[0].unsafeAddr)
+
+proc setUniform*(this: OglProgram, name: string, value: Vec2f) =
+    var location = glGetUniformLocation(this.glProgramId, name)
+    glUniform2fv(location, 1, value.arr[0].unsafeAddr)
+
+
 method loadTexture*(this: OglRenderer, path: string): Texture = 
     discard
 
@@ -93,14 +134,14 @@ method loadModel*(this: OglRenderer, path: string): ModelId =
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(Normal), m.normals[0].addr, GL_STATIC_DRAW)
             glVertexAttribPointer(1, 3, cGL_FLOAT, GL_FALSE, 0, nil)
-            glEnableVertexAttribArray(2)
+            glEnableVertexAttribArray(1)
 
         if m.hasTexCoords():
             glGenBuffers(1, buffer.addr)
             glBindBuffer(GL_ARRAY_BUFFER, buffer)
             glBufferData(GL_ARRAY_BUFFER, m.vertices.len * sizeof(TexCoord), m.texCoords[0].addr, GL_STATIC_DRAW)
             glVertexAttribPointer(2, 2, cGL_FLOAT, GL_FALSE, 0, nil)
-            glEnableVertexAttribArray(1)
+            glEnableVertexAttribArray(2)
 
         if m.hasColors():
             glGenBuffers(1, buffer.addr)
@@ -131,6 +172,25 @@ method useShaderProgram*(this: OglRenderer, shaderProgramId: ShaderProgramId) =
     program.use()
     this.currentShaderProgramId = shaderProgramId
 
+method addLight*(this: OglRenderer, light: Light) {.base.} =
+    light.id = len(this.lights).LightId
+    this.lights[light.id] = light
+    discard
+
+method getLights(this: OglRenderer): seq[Light] = 
+    result = values(this.lights)
+
+method clearLight(this: OglRenderer, name: LightName) = discard
+
+method preRender*(this: OglRenderer) =
+    if this.currentShaderProgramId == 0:
+        this.useShaderProgram(this.defaultShaderProgram)
+
+    var program = this.shaderPrograms[this.currentShaderProgramId]
+    for i,li in pairs(this.lights):
+        program.setUniform("lights" & i, li.position)
+    discard
+
 method render*(this: OglRenderer, tasks: seq[RenderTask]) =
     # Sort by z to render further items first
     # proc sortTasks(x, y: RenderTask): int = 
@@ -156,11 +216,8 @@ method render*(this: OglRenderer, tasks: seq[RenderTask]) =
         var bufferedMesh = bufferedModel.meshes[task.meshId]
 
         let mvp = projection * view * task.matrix
-        let mvpId = glGetUniformLocation(shaderProgram.glProgramId, "mvp")
-        glUniformMatrix4fv(mvpId, 1.GLsizei, false.GLboolean, mvp.arr[0].arr[0].unsafeAddr)
-
-        # echo bufferedMesh.indices.len
-
+        shaderProgram.setUniform("mvp", mvp)
+        
         glBindVertexArray(bufferedMesh.vaoId)
         glDrawElements(GL_TRIANGLES, bufferedMesh.faceCount, GL_UNSIGNED_INT, nil)
         glBindVertexArray(0)

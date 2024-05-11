@@ -1,4 +1,5 @@
 import assimp
+import std/logging
 import ../graphics
 import model
 import os
@@ -7,6 +8,7 @@ type
     AssimpLoader* = ref object of ModelLoader
 
 method loadModel*(this: AssimpLoader, path: string): Model = 
+    info "Loading model: ", path
     if not fileExists(path):
         raise newException(IOError, "File does not exist: " & path)
 

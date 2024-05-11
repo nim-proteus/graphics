@@ -58,6 +58,8 @@ test "can render duck":
     var modelId = g.loadModel(path)
     var mi = g.getModelInstance(modelId)
 
+    var light = newLight(vec3f(0, 0, 0), vec3f(1, 1, 1), 1.0f)
+
     var tasks = newSeq[RenderTask]()
     for mesh in mi.meshes:
         # Where do we store the translate and rotation and scale?

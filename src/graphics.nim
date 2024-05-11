@@ -2,6 +2,7 @@ import glm
 import std/tables
 
 type 
+    ResourceName* = string
     ResourceId* = uint
     TextureId* = ResourceId
     ModelId* = ResourceId
@@ -9,6 +10,8 @@ type
     ModelInstanceId* = ResourceId
     ShaderId* = ResourceId
     ShaderProgramId* = ResourceId
+    LightId* = ResourceId
+    LightName* = ResourceName
 
     Vertex* = Vec3f
     TexCoord* = Vec3f   
@@ -41,6 +44,12 @@ type
     Texture* = ref object of RootObj
         id*: TextureId
 
+    Light* = ref object of RootObj
+        id*: LightId
+        name*: string
+        position*: Vec3f
+        color*: Color
+
     ShaderProgram* = ref object of RootObj
         id*: ShaderProgramId
 
@@ -58,11 +67,15 @@ type
         rotation*: Rotation
 
 
+method setLight(this: Renderer, light: Light) {.base.} = discard
+method getLights(this: Renderer): seq[Light] {.base.} = discard
+method clearLight(this: Renderer, name: LightName) {.base.} = discard
 method loadShaderProgram*(this: Renderer, vertexShaderText: string, fragmentShaderText: string): ShaderProgramId {.base.} = discard
 method useShaderProgram*(this: Renderer, shaderProgramId: ShaderProgramId) {.base.} = discard
 # method loadShader*(this: Renderer, shaderType: ShaderType, shaderText: string): Shader {.base.} = discard
 method loadTexture*(this: Renderer, path: string): Texture {.base.} = discard
 method loadModel*(this: Renderer, path: string): ModelId {.base.} = discard
+method preRender*(this: Renderer) {.base.} = discard
 method render*(this: Renderer, tasks: seq[RenderTask]) {.base.} = discard
 method getModelInstance*(this: Renderer, modelId: ModelId): ModelInstance {.base.} = discard
 method getModelInstance*(this: Renderer, path: string): ModelInstance {.base.} = discard
