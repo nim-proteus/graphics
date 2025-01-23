@@ -11,7 +11,6 @@ import graphics
 import graphics/oglrenderer 
 import std/logging
 import glm
-import os
 
 test "can render duck":
     let fmtStr = "[$time] - $levelname: "

@@ -11,6 +11,6 @@ srcDir        = "src"
 
 requires "nim >= 1.6.6"
 requires "opengl"
-requires "glfw"
+requires "https://github.com/nimgl/glfw.git"
 requires "glm"
 requires "https://github.com/beef331/nimassimp >= 0.1.3"
