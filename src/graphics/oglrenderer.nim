@@ -237,7 +237,7 @@ method getModelInstance*(this: OglRenderer, id: ModelId): ModelInstance =
     for m in model.meshes:
         var mesh = new(MeshInstance)
         mesh.meshId = m.id
-        mesh.rotation = glm.quat(vec3f(1, 0, 0), 0)
+        mesh.rotation = glm.quatf(vec3f(1, 0, 0), 0)
         mesh.translation = vec3f(0, 0, 0)
         result.meshes.add(mesh)
 
@@ -304,7 +304,7 @@ proc loadShaderOgl(shaderType: ShaderType, shaderText: string): OglShader =
             buff = newString(512)
             len = 0.GLsizei
 
-        glGetShaderInfoLog(shaderId, len(buff).GLsizei, len.addr, buff[0].addr)
+        glGetShaderInfoLog(shaderId, len(buff).GLsizei, len.addr, cast[cstring](buff[0].addr))
         buff.setLen(len.int)
         quit buff
 
@@ -329,7 +329,7 @@ proc newShaderProgram(this: OglRenderer, vs: OglShader, fs: OglShader): OglProgr
             buff = newString(512)
             len = 0.GLsizei
 
-        glGetProgramInfoLog(programId, len(buff).GLsizei, len.addr, buff[0].addr)
+        glGetProgramInfoLog(programId, len(buff).GLsizei, len.addr, cast[cstring](buff[0].addr))
         buff.setLen(len.int)
         error buff
         quit ""
