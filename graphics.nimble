@@ -9,7 +9,7 @@ srcDir        = "src"
 
 # Dependencies
 
-requires "nim >= 1.6.6"
+requires "nim >= 2.2.0"
 requires "opengl"
 requires "https://github.com/nimgl/glfw.git"
 requires "glm"

@@ -130,3 +130,9 @@ proc setCameraEye*(this: Renderer, cameraEye: Vec3f) = this.cameraEye = cameraEy
 proc getCameraLookAt*(this: Renderer): Vec3f = this.cameraLookAt
 
 proc setCameraLookAt*(this: Renderer, cameraLookAt: Vec3f) = this.cameraLookAt = cameraLookAt
+
+proc newLight*(name: string, position: Vec3f, color: Color): Light =
+    result = new(Light)
+    result.name = name
+    result.position = position
+    result.color = color

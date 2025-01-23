@@ -6,7 +6,6 @@ import glfw
 import model
 import modelloader
 import ../graphics
-import strutils
 
 # import std/algorithm  # Required for sorting...
 
@@ -67,7 +66,8 @@ const TextureTypeMap = [
 
 
 proc loadShaderOgl(shaderType: ShaderType, shaderText: string): OglShader
-proc newProgramFromSource*(this: OglRenderer, vertexShader: string, fragmentShader: string): OglProgram
+
+proc newProgramFromSource(this: OglRenderer, vertexShader: string, fragmentShader: string): OglProgram
 
 
 proc delete*(this: OglShader) = 
@@ -172,7 +172,7 @@ method useShaderProgram*(this: OglRenderer, shaderProgramId: ShaderProgramId) =
     program.use()
     this.currentShaderProgramId = shaderProgramId
 
-method addLight*(this: OglRenderer, light: Light) {.base.} =
+method addLight*(this: OglRenderer, light: Light) =
     light.id = len(this.lights).LightId
     this.lights[light.id] = light
     discard
