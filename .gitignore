@@ -3,3 +3,5 @@ nimblecache/
 htmldocs/
 tests/test1
 graphics
+nimble.develop
+nimble.paths
